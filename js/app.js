@@ -57,6 +57,7 @@ document.addEventListener('click', e => {
   $$('.pane[data-g="' + g + '"]').forEach(p => p.hidden = p.id !== 't-' + b.dataset.t);
   if (b.dataset.t === 'riwayat') muatRiwayat();
   if (b.dataset.t === 'izinadm') muatIzinAdmin();
+  if (b.dataset.t === 'setting') muatSetting();
 });
 
 // ---------- Murid ----------
@@ -144,6 +145,63 @@ $('#izin-list').onclick = async e => {
   const c = document.querySelector('[data-c="' + b.dataset.id + '"]');
   const j = await api('keputusan', { id: b.dataset.id, keputusan: b.dataset.k, catatan: c ? c.value : '' });
   toast(j.message, 'ok'); muatIzinAdmin();
+};
+
+// ---------- Pengaturan ----------
+const SET = [['NAMA_SEKOLAH', 'Nama sekolah', 'text'], ['LAT', 'Latitude gerbang sekolah', 'text'], ['LNG', 'Longitude gerbang sekolah', 'text'],
+  ['RADIUS', 'Radius absen (meter, 10–500)', 'number'], ['MASUK_MULAI', 'Absen masuk dibuka', 'time'], ['MASUK_BATAS', 'Batas tepat waktu (setelahnya Terlambat)', 'time'],
+  ['TERLAMBAT_BATAS', 'Batas terlambat (setelahnya Alpa)', 'time'], ['PULANG_MULAI', 'Absen pulang dibuka', 'time'], ['PULANG_AKHIR', 'Absen pulang ditutup', 'time'],
+  ['HARI_LIBUR', 'Hari libur (yyyy-mm-dd, pisahkan dengan koma)', 'text']];
+async function muatSetting() {
+  const j = await api('setGet');
+  $('#set-form').innerHTML = '<h2>Pengaturan Sekolah & Absensi</h2>' + SET.map(f => `<label>${f[1]}<input id="s-${f[0]}" type="${f[2]}" value="${esc(j.data[f[0]])}" ${f[2] === 'number' ? 'min="10" max="500"' : ''}></label>`).join('')
+    + '<div class="actions"><button type="button" class="btn ghost" id="s-gps">📍 Pakai lokasi saya</button><button class="btn primary" type="submit">Simpan Pengaturan</button></div>';
+}
+$('#set-form').onsubmit = async e => {
+  e.preventDefault(); const d = {}; SET.forEach(f => d[f[0]] = $('#s-' + f[0]).value);
+  const j = await api('setSimpan', d); toast(j.message, 'ok'); $('#sekolah').textContent = d.NAMA_SEKOLAH;
+};
+$('#set-form').onclick = e => {
+  if (e.target.id !== 's-gps') return;
+  navigator.geolocation.getCurrentPosition(p => { $('#s-LAT').value = p.coords.latitude.toFixed(6); $('#s-LNG').value = p.coords.longitude.toFixed(6); toast('Lokasi terisi. Klik Simpan.', 'ok'); },
+    () => toast('Lokasi tidak tersedia. Izinkan akses lokasi.', 'err'), { enableHighAccuracy: true, timeout: 15000 });
+};
+
+// ---------- Impor murid dari Excel ----------
+let IMP = [];
+const ALIAS = { nis: ['nis'], nama: ['nama', 'nama murid', 'nama siswa'], kelas: ['kelas'], sandi: ['sandi', 'kata sandi', 'password'], email: ['email_ortu', 'email ortu', 'email orang tua', 'email orang tua/wali', 'email'] };
+$('#imp-template').onclick = () => {
+  if (typeof XLSX === 'undefined') return toast('Pustaka Excel gagal dimuat. Periksa koneksi internet.', 'err');
+  const ws = XLSX.utils.aoa_to_sheet([['nis', 'nama', 'kelas', 'sandi', 'email_ortu'], ['20240002', 'Budi Santoso', 'X-1', 'budi123', 'ortu.budi@gmail.com']]);
+  ws['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 10 }, { wch: 14 }, { wch: 30 }];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Murid'); XLSX.writeFile(wb, 'template-data-murid.xlsx');
+};
+$('#imp-file').onchange = async e => {
+  const f = e.target.files[0]; IMP = []; $('#imp-hasil').innerHTML = ''; $('#imp-go').disabled = true;
+  if (!f) return $('#imp-prev').innerHTML = '';
+  if (typeof XLSX === 'undefined') return toast('Pustaka Excel gagal dimuat. Periksa koneksi internet.', 'err');
+  try {
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
+    XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false }).forEach((r, i) => {
+      const k = {}, o = { baris: i + 2 }; Object.keys(r).forEach(h => k[String(h).trim().toLowerCase()] = r[h]);
+      Object.keys(ALIAS).forEach(f2 => { const a = ALIAS[f2].find(x => x in k); o[f2] = a ? String(k[a]).trim() : ''; });
+      if (o.nis || o.nama || o.kelas || o.email) IMP.push(o);
+    });
+  } catch (x) { return toast('File tidak bisa dibaca. Gunakan template.', 'err'); }
+  $('#imp-prev').innerHTML = `<p class="${IMP.length ? 'ok-t' : 'err-t'}">${IMP.length} baris terbaca.${IMP.length ? '' : ' Pastikan header: nis, nama, kelas, sandi, email_ortu.'}</p>`
+    + (IMP.length ? `<div class="scroll"><table><thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Email orang tua</th></tr></thead><tbody>${IMP.slice(0, 5).map(r => `<tr><td>${esc(r.nis)}</td><td>${esc(r.nama)}</td><td>${esc(r.kelas)}</td><td>${esc(r.email)}</td></tr>`).join('')}</tbody></table></div>${IMP.length > 5 ? '<small class="muted">Menampilkan 5 baris pertama.</small>' : ''}` : '');
+  $('#imp-go').disabled = !IMP.length;
+};
+$('#imp-go').onclick = async () => {
+  let tambah = 0, lewat = 0, galat = [];
+  $('#imp-go').disabled = true;
+  for (let i = 0; i < IMP.length; i += 100) {
+    try { const j = await api('impor', { rows: IMP.slice(i, i + 100) }); tambah += j.data.ditambah; lewat += j.data.dilewati; galat = galat.concat(j.data.galat); }
+    catch (x) { galat.push('Kiriman baris ' + (i + 2) + '–' + (i + 101) + ' gagal: ' + x.message); }
+  }
+  $('#imp-hasil').innerHTML = `<p class="ok-t">✅ ${tambah} murid ditambahkan · ${lewat} dilewati (NIS sudah ada) · ${galat.length} baris bermasalah</p>`
+    + (galat.length ? `<ul class="err-t">${galat.slice(0, 30).map(g => `<li>${esc(g)}</li>`).join('')}</ul>${galat.length > 30 ? '<small class="muted">…dan lainnya.</small>' : ''}` : '');
+  IMP = []; $('#imp-file').value = ''; $('#imp-prev').innerHTML = ''; if (tambah) muatRekap();
 };
 
 // ---------- Init ----------
