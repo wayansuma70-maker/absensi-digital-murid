@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 <header class="top">
@@ -17,15 +17,39 @@
 
 <main>
 <!-- LOGIN -->
-<section id="v-login" class="card narrow">
-  <h1>Masuk</h1>
-  <form id="f-login">
-    <label>Masuk sebagai
-      <select id="l-role"><option value="murid">Murid</option><option value="admin">Admin (Guru/Pegawai)</option></select></label>
-    <label><span id="l-idlabel">NIS</span><input id="l-id" required autocomplete="username" inputmode="text"></label>
-    <label>Kata sandi<input id="l-sandi" type="password" required autocomplete="current-password"></label>
-    <button class="btn primary" type="submit">Masuk</button>
-  </form>
+<section id="v-login" class="lg">
+  <div class="lg-top"><div class="brand"><span class="logo2 big">🎓</span><div><b id="lg-sekolah">Absensi Digital</b><small>ABSENSI DIGITAL MURID</small></div></div><span class="chip green">🛡 Presensi Terverifikasi</span></div>
+  <div class="lg-card">
+    <div class="lg-left">
+      <span class="lg-badge">✔ Aplikasi Absensi Digital Resmi Sekolah</span>
+      <h1>Presensi Digital Cerdas & Terverifikasi Real-Time</h1>
+      <p id="lg-desc">Platform presensi berbasis Geofence GPS dan swafoto yang tersinkronisasi otomatis dengan Google Sheets & Drive.</p>
+      <div class="feat">
+        <div class="fc"><span class="fi">◎</span><div><b>Geofence Presisi</b><small id="ft-rad2">Absen hanya sah di dalam radius titik sekolah</small></div><i class="fb solid" id="ft-rad">AKTIF</i></div>
+        <div class="fc"><span class="fi">☺</span><div><b>Swafoto Absensi</b><small>Selfie saat absen tersimpan di Google Drive sebagai bukti kehadiran</small></div><i class="fb">Foto Tersimpan</i></div>
+        <div class="fc"><span class="fi">⟳</span><div><b>Otomasi Spreadsheet & Drive</b><small>Data tercatat otomatis di Google Sheets dan arsip aman</small></div><i class="fb txt">Live Sync</i></div>
+      </div>
+      <div class="lclock"><span class="fi">🕒</span><div><small>ZONA WAKTU SEKOLAH</small><b class="jam">--:--:--</b></div><span class="lpill" id="lg-jml">👥 Murid Terdaftar</span></div>
+    </div>
+    <div class="lg-right">
+      <div class="rh"><small class="blue">PORTAL AKSES AKADEMIK</small><small id="lg-ta"></small></div>
+      <h2>Masuk ke Akun Anda</h2>
+      <p class="sub">Pilih peran untuk melanjutkan absensi harian atau masuk ke dasbor guru.</p>
+      <div class="seg" id="seg"><button type="button" class="on" data-role="murid">🎓 Murid <i id="seg-n"></i></button><button type="button" data-role="admin">🪪 Admin / Guru</button></div>
+      <form id="f-login">
+        <input type="hidden" id="l-role" value="murid">
+        <div class="fl"><label for="l-id" id="l-idlabel">Nomor Induk Siswa (NIS)</label><small id="l-idhint">Sesuai Buku Induk</small></div>
+        <div class="inp"><span>🪪</span><input id="l-id" required autocomplete="username" placeholder="Masukkan NIS"></div>
+        <p class="hint" id="l-hint2">ⓘ NIS didaftarkan oleh admin sekolah.</p>
+        <div class="fl"><label for="l-sandi">Kata Sandi</label><a href="#" id="l-lupa">Lupa Kata Sandi?</a></div>
+        <div class="inp"><span>🔒</span><input id="l-sandi" type="password" required autocomplete="current-password" placeholder="Masukkan kata sandi"><button type="button" id="l-eye" aria-label="Tampilkan kata sandi">👁</button></div>
+        <div class="rowx"><label class="chk"><input type="checkbox" id="l-ingat" checked> Ingat sesi di gawai ini</label><span class="dev" id="l-dev"></span></div>
+        <button class="bigbtn" type="submit" id="l-btn">Masuk sebagai Murid →</button>
+      </form>
+      <div class="foot"><div class="fr"><span class="gt">🔒 Koneksi HTTPS & kata sandi di-hash SHA-256</span><span>Google Apps Script</span></div>
+        <div class="help"><span>🎧 Mengalami kendala akun? Hubungi Guru Piket atau Admin IT.</span><a href="#" id="l-bantu">Bantuan</a></div></div>
+    </div>
+  </div>
 </section>
 
 <!-- MURID -->
@@ -119,7 +143,7 @@
 <div id="toast"></div><div id="loading" hidden><div class="spin"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/config.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
 </body>
 </html>
