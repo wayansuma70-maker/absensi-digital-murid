@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
 <header class="top">
@@ -117,7 +117,8 @@
         <label>Surat / bukti (foto atau PDF, maks 3 MB)<input id="z-file" type="file" accept="image/*,.pdf"></label>
         <button class="btn primary" type="submit">Kirim Pengajuan</button></form></div>
       <div class="mpage" id="m-profil" hidden>
-        <div class="card" style="max-width:560px"><h2>Profil Murid</h2><table><tbody>
+        <div class="card" style="max-width:560px"><h2>Profil Murid</h2>
+          <div class="pfoto"><span class="ava big" id="mp-foto" style="background:#DBEAFE"></span><div><button class="btn primary sm" id="mp-ganti" type="button">📷 Ganti Foto</button> <button class="btn ghost sm" id="mp-hapus" type="button">Hapus Foto</button><small class="muted" style="display:block;margin-top:6px">Gambar otomatis dipotong persegi dan dikecilkan (160×160).</small></div></div><table><tbody>
           <tr><th>Nama</th><td id="pf-nama"></td></tr><tr><th>NIS</th><td id="pf-nis"></td></tr><tr><th>Kelas</th><td id="pf-kelas"></td></tr><tr><th>Email orang tua</th><td id="pf-email"></td></tr></tbody></table></div>
         <form class="card" id="f-sandi" style="max-width:560px"><h2>Ganti Kata Sandi</h2>
           <label>Kata sandi lama<input id="sd-lama" type="password" required autocomplete="current-password"></label>
@@ -175,16 +176,28 @@
         <div class="actions"><button class="btn ghost" id="imp-template" type="button">⬇️ Unduh Template</button></div>
         <label style="margin-top:14px">File Excel (.xlsx, .xls, .csv)<input type="file" id="imp-file" accept=".xlsx,.xls,.csv"></label>
         <div id="imp-prev"></div><button class="btn primary" id="imp-go" type="button" disabled>Impor Murid</button><div id="imp-hasil"></div></div></div>
-      <div class="apage" id="p-setting" hidden><form class="card" id="set-form"></form></div>
+      <div class="apage" id="p-setting" hidden>
+        <div class="tabs2" id="set-tabs"><button class="on" data-st="sekolah">🏫 Pengaturan Sekolah</button><button data-st="profil">👤 Profil Admin & Foto</button><button data-st="sandi">🔑 Ganti Kata Sandi</button></div>
+        <form class="card" id="set-form"></form>
+        <div class="card" id="st-profil" hidden><h2>Profil Admin</h2>
+          <div class="pfoto"><span class="ava big" id="ad-foto" style="background:#DBEAFE"></span><div><button class="btn primary sm" id="ad-ganti" type="button">📷 Ganti Foto</button> <button class="btn ghost sm" id="ad-hapus" type="button">Hapus Foto</button><small class="muted" style="display:block;margin-top:6px">Gambar otomatis dipotong persegi dan dikecilkan (160×160).</small></div></div>
+          <form id="f-profil-adm" style="max-width:520px"><label>ID Admin<input id="pa-id" disabled></label><label>Nama<input id="pa-nama" required maxlength="60"></label><label>Email<input id="pa-email" type="email" placeholder="opsional"></label><button class="btn primary" type="submit">Simpan Profil</button></form></div>
+        <form class="card" id="st-sandi" hidden style="max-width:560px"><h2>Ganti Kata Sandi</h2>
+          <label>Kata sandi lama<input id="pw-lama" type="password" required autocomplete="current-password"></label>
+          <label>Kata sandi baru (min. 6 karakter)<input id="pw-baru" type="password" required minlength="6" autocomplete="new-password"></label>
+          <label>Ulangi kata sandi baru<input id="pw-ulang" type="password" required minlength="6" autocomplete="new-password"></label>
+          <button class="btn primary" type="submit">Simpan Kata Sandi</button></form>
+      </div>
     </div>
   </div>
 </section>
 </main>
 
+<input type="file" id="foto-file" accept="image/*" hidden>
 <div id="toast"></div><div id="loading" hidden><div class="spin"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>
