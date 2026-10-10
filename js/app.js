@@ -1,3 +1,7 @@
+if (!document.getElementById('snav')) { // index.html usang (belum sesuai versi app.js)
+  document.body.insertAdjacentHTML('afterbegin', '<div style="padding:16px;background:#FEE2E2;color:#9F1239;font:600 14px Inter,sans-serif">⚠ File index.html di repo belum diperbarui. Salin index.html terbaru dari ZIP ke folder repo, lalu git add . → git commit → git push, dan buka dengan Ctrl+Shift+R.</div>');
+  throw new Error('index.html usang');
+}
 // ============================================================
 // Absensi Digital Murid — Frontend (vanilla JS, fetch ke GAS)
 // ============================================================
