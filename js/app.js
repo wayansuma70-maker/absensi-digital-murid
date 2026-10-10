@@ -73,6 +73,7 @@ function mulai() {
     $('#m-nama').textContent = u.nama; $('#mu-nama').textContent = u.nama; $('#mu-info').textContent = 'NIS ' + u.id + ' • Kelas ' + u.kelas; $('#mu-ava').textContent = ini(u.nama);
     $('#m-info').textContent = 'NIS ' + u.id + ' • Kelas ' + u.kelas; $('#z-tgl').value = hariIni(); $('#r-bulan').value = hariIni().slice(0, 7); RK = null; navM('beranda');
   }
+  tampilAva();
 }
 
 // ---------- Portal Murid ----------
@@ -254,7 +255,7 @@ async function nav(p) {
   $$('.apage').forEach(x => x.hidden = x.id !== 'p-' + p);
   $('#crumb').textContent = { dasbor: 'Dasbor Harian', kehadiran: 'Data Kehadiran', izin: 'Persetujuan Izin', murid: 'Kelola Murid', setting: 'Pengaturan Sekolah' }[p];
   if (p === 'dasbor') await muatDasbor(); if (p === 'kehadiran') await muatKehadiran();
-  if (p === 'izin') await muatIzinAdmin(); if (p === 'setting') await muatSetting();
+  if (p === 'izin') await muatIzinAdmin(); if (p === 'setting') { await muatSetting(); setTab('sekolah'); }
 }
 $('#snav').onclick = e => { const b = e.target.closest('button'); if (b) nav(b.dataset.p); };
 $('#bell').onclick = () => nav('izin');
@@ -406,6 +407,46 @@ $('#set-form').onclick = e => {
   if (e.target.id !== 's-gps') return;
   navigator.geolocation.getCurrentPosition(p => { $('#s-LAT').value = p.coords.latitude.toFixed(6); $('#s-LNG').value = p.coords.longitude.toFixed(6); toast('Lokasi terisi. Klik Simpan.', 'ok'); },
     () => toast('Lokasi tidak tersedia. Izinkan akses lokasi.', 'err'), { enableHighAccuracy: true, timeout: 15000 });
+};
+
+// ---------- Foto profil, profil admin, ganti sandi ----------
+const simpanSesi = () => (localStorage.getItem('sesi') ? localStorage : sessionStorage).setItem('sesi', JSON.stringify(S));
+function tampilAva() {
+  const f = S && S.user.foto || '';
+  ['#au-ava', '#mu-ava', '#ad-foto', '#mp-foto'].forEach(id => { const e = $(id); if (!e) return; e.style.backgroundImage = f ? `url("${f}")` : ''; e.classList.toggle('foto', !!f); e.textContent = f ? '' : ini(S.user.nama); });
+}
+async function kirimFoto(data) { const j = await api('foto', { data }); S.user.foto = j.data.foto; simpanSesi(); tampilAva(); toast(j.message, 'ok'); }
+$('#ad-ganti').onclick = $('#mp-ganti').onclick = () => $('#foto-file').click();
+$('#ad-hapus').onclick = $('#mp-hapus').onclick = () => { if (S.user.foto && confirm('Hapus foto profil?')) kirimFoto(''); };
+$('#foto-file').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (!f.type.startsWith('image/')) return toast('File harus berupa gambar.', 'err');
+  if (f.size > 8 * 1024 * 1024) return toast('Gambar terlalu besar (maks 8 MB).', 'err');
+  const img = await new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = URL.createObjectURL(f); });
+  if (!img) return toast('Gambar tidak bisa dibaca.', 'err');
+  const c = document.createElement('canvas'), n = 160, m = Math.min(img.width, img.height); c.width = c.height = n; // potong persegi di tengah
+  c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, n, n);
+  kirimFoto(c.toDataURL('image/jpeg', 0.8));
+};
+$('#au-ava').onclick = async () => { await nav('setting'); setTab('profil'); };
+$('#mu-ava').onclick = () => navM('profil');
+
+function setTab(t) {
+  $$('#set-tabs button').forEach(b => b.classList.toggle('on', b.dataset.st === t));
+  $('#set-form').hidden = t !== 'sekolah'; $('#st-profil').hidden = t !== 'profil'; $('#st-sandi').hidden = t !== 'sandi';
+  if (t === 'profil') { $('#pa-id').value = S.user.id; $('#pa-nama').value = S.user.nama; $('#pa-email').value = S.user.email || ''; tampilAva(); }
+}
+$('#set-tabs').onclick = e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.st); };
+$('#f-profil-adm').onsubmit = async e => {
+  e.preventDefault();
+  const j = await api('profilAdmin', { nama: $('#pa-nama').value, email: $('#pa-email').value });
+  S.user.nama = j.data.nama; S.user.email = j.data.email; simpanSesi();
+  $('#au-nama').textContent = S.user.nama; $('#uname').textContent = S.user.nama; tampilAva(); toast(j.message, 'ok');
+};
+$('#st-sandi').onsubmit = async e => {
+  e.preventDefault();
+  if ($('#pw-baru').value !== $('#pw-ulang').value) return toast('Kata sandi baru dan pengulangannya tidak sama.', 'err');
+  const j = await api('sandi', { lama: $('#pw-lama').value, baru: $('#pw-baru').value }); toast(j.message, 'ok'); e.target.reset();
 };
 
 // ---------- Impor murid dari Excel ----------
