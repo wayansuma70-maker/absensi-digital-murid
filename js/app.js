@@ -28,10 +28,11 @@ async function api(action, data, bg) {
   finally { $('#loading').hidden = true; }
 }
 
-function tampil(v) { ['login', 'murid', 'admin'].forEach(x => $('#v-' + x).hidden = x !== v); $('#userbox').hidden = v === 'login'; document.body.classList.toggle('is-admin', v === 'admin'); document.body.classList.toggle('is-login', v === 'login'); }
+const setSekolah = n => $$('.js-sekolah').forEach(e => e.textContent = n);
+function tampil(v) { ['login', 'murid', 'admin'].forEach(x => $('#v-' + x).hidden = x !== v); $('#userbox').hidden = v === 'login'; document.body.classList.toggle('is-admin', v === 'admin' || v === 'murid'); document.body.classList.toggle('is-login', v === 'login'); }
 function tick() {
   const t = new Date(Date.now() + off).toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour12: false }).replace(/\./g, ':');
-  $$('.jam').forEach(e => e.textContent = t);
+  $$('.jam').forEach(e => e.textContent = t); renderJendela();
   const a = $('#atime'); if (a) { a.textContent = new Date(Date.now() + off).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Makassar' }) + ' · ' + t + ' WITA'; renderHero(); }
 }
 
@@ -67,33 +68,157 @@ $('#btn-logout').onclick = $('#a-logout').onclick = () => keluar();
 function mulai() {
   $('#uname').textContent = S.user.nama;
   if (S.user.role === 'admin') { tampil('admin'); $('#au-nama').textContent = S.user.nama; $('#au-ava').textContent = ini(S.user.nama); $('#a-tgl').value = hariIni(); nav('dasbor'); }
-  else { tampil('murid'); $('#m-nama').textContent = S.user.nama; $('#m-kelas').textContent = 'Kelas ' + S.user.kelas + ' · NIS ' + S.user.id; $('#z-tgl').value = hariIni(); $('#r-bulan').value = hariIni().slice(0, 7); muatBeranda(); }
+  else {
+    tampil('murid'); const u = S.user;
+    $('#m-nama').textContent = u.nama; $('#mu-nama').textContent = u.nama; $('#mu-info').textContent = 'NIS ' + u.id + ' • Kelas ' + u.kelas; $('#mu-ava').textContent = ini(u.nama);
+    $('#m-info').textContent = 'NIS ' + u.id + ' • Kelas ' + u.kelas; $('#z-tgl').value = hariIni(); $('#r-bulan').value = hariIni().slice(0, 7); RK = null; navM('beranda');
+  }
 }
 
-// ---------- Tab ----------
-document.addEventListener('click', e => {
-  const b = e.target.closest('.tabs button'); if (!b) return;
-  const g = b.parentElement.dataset.g;
-  $$('.tabs[data-g="' + g + '"] button').forEach(x => x.classList.toggle('on', x === b));
-  $$('.pane[data-g="' + g + '"]').forEach(p => p.hidden = p.id !== 't-' + b.dataset.t);
-  if (b.dataset.t === 'riwayat') muatRiwayat();
-});
+// ---------- Portal Murid ----------
+let HM = null, RK = null, JN = 'masuk', luxT = null, LUX = null, JRK = null;
+const HARI = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+const jarakM = (a, b, c, d) => { const r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 2 * 6371000 * Math.asin(Math.sqrt(x)); };
+const jamWita = () => new Date(Date.now() + off).toLocaleTimeString('en-GB', { timeZone: 'Asia/Makassar', hour12: false });
 
-// ---------- Murid ----------
+function navM(p) {
+  stopKamera();
+  $$('#mnav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  $$('.mpage').forEach(x => x.hidden = x.id !== 'm-' + p);
+  if (p === 'beranda') muatBeranda(); if (p === 'riwayat') muatRiwayat(); if (p === 'profil') renderProfil();
+}
+$('#mnav').onclick = e => { const b = e.target.closest('button'); if (b) navM(b.dataset.p); };
+$('#m-keluar').onclick = () => keluar();
+$('#m-ajukan').onclick = () => navM('izin');
+$('#m-help').onclick = () => toast(CFG.guru_piket ? 'Guru Piket: ' + CFG.guru_piket : 'Hubungi Guru Piket atau Admin sekolah.');
+
 async function muatBeranda() {
-  const j = await api('home'); CFG = j.data.cfg; const a = j.data.absen;
-  $('#st-hari').innerHTML = a ? badge(a.status) + `<small style="display:block;margin-top:4px;color:#C7D2FE">Masuk ${esc(a.jam_masuk || '–')} · Pulang ${esc(a.jam_pulang || '–')}</small>` : badge('Belum') + ' Belum absen';
-  $('#win').textContent = CFG.masuk_mulai + ' – ' + CFG.masuk_batas + ' WITA';
-  $('#rad').textContent = 'Radius valid: ' + CFG.radius + ' m dari sekolah · Pulang ' + CFG.pulang_mulai;
-  $('#btn-masuk').disabled = !!a; $('#btn-pulang').disabled = !(a && a.jam_masuk && !a.jam_pulang);
+  const j = await api('home'); HM = j.data; CFG = HM.cfg; renderBeranda();
+  if (RK) renderRingkasan(); else setTimeout(muatRingkasan, 1500 + Math.random() * 4000); // ditunda agar tidak membebani jam puncak absen
 }
+async function muatRingkasan() { try { RK = (await api('ringkasan', {}, true)).data; renderRingkasan(); } catch (e) { /* toast sudah tampil */ } }
+
+function renderBeranda() {
+  const a = HM.absen, c = CFG, jam = jamWita().slice(0, 5), R = c.radius, tg = hariIni(), y = +tg.slice(0, 4), bl = +tg.slice(5, 7);
+  $('#m-ta').textContent = 'T.A. ' + (bl >= 7 ? y + '/' + (y + 1) : (y - 1) + '/' + y) + ' • Semester ' + (bl >= 7 ? 'Ganjil' : 'Genap');
+  $('#zona-teks').textContent = 'Radius ' + R + ' m'; $('#ch-rad').textContent = '🛡 Batas radius: ' + R + ' m';
+  $('#at-m-t').textContent = '(' + fmt(c.masuk_mulai) + ' – ' + fmt(c.masuk_batas) + ' WITA)'; $('#at-p-t').textContent = '(' + fmt(c.pulang_mulai) + ' – ' + fmt(c.pulang_akhir) + ' WITA)';
+  const adaMasuk = !!(a && a.jam_masuk), adaPulang = !!(a && a.jam_pulang);
+  JN = adaMasuk && !adaPulang ? 'pulang' : 'masuk';
+  $('#at-masuk').disabled = !!a; $('#at-pulang').disabled = !(adaMasuk && !adaPulang);
+  $('#at-masuk').classList.toggle('on', JN === 'masuk'); $('#at-pulang').classList.toggle('on', JN === 'pulang');
+  $('#at-pulang').firstChild.textContent = (adaMasuk && !adaPulang ? '' : '🔒 ') + 'Absen Pulang';
+  const st = !a ? ['Belum Absen Masuk', 'red'] : adaPulang ? ['Sudah Absen Pulang', 'green'] : adaMasuk ? ['Sudah Absen Masuk · ' + a.status, a.status === 'Terlambat' ? 'amber' : 'green'] : [a.status, a.status === 'Alpa' ? 'red' : 'blue'];
+  $('#m-chip').textContent = '● ' + st[0]; $('#m-chip').className = 'chip ' + st[1];
+  let pesan = '';
+  if (adaPulang) pesan = `Presensi hari ini lengkap ✅ — masuk ${a.jam_masuk}, pulang ${a.jam_pulang} WITA.`;
+  else if (a && !adaMasuk) pesan = `Status hari ini: ${a.status}${a.keterangan ? ' — ' + a.keterangan : ''}.`;
+  else if (adaMasuk && jam < c.pulang_mulai) pesan = `Absen masuk tercatat pukul ${a.jam_masuk} WITA (${a.status}). Absen pulang dibuka pukul ${fmt(c.pulang_mulai)} WITA.`;
+  else if (adaMasuk && jam > c.pulang_akhir) pesan = `Absen masuk tercatat pukul ${a.jam_masuk} WITA. Waktu absen pulang telah berakhir.`;
+  $('#done-msg').hidden = !pesan; $('#done-msg').textContent = pesan; $('#cam-area').hidden = !!pesan;
+  $('#btn-kirim').textContent = '📷 Ambil Foto & Kirim Presensi ' + (JN === 'masuk' ? 'Masuk' : 'Pulang') + ' Sekarang';
+  const em = S.user.email; $('#ortu-judul').textContent = em ? 'Notifikasi Orang Tua Terhubung' : 'Email Orang Tua Belum Terdaftar';
+  $('#ortu-teks').textContent = em ? 'Tanda terima absen dikirim ke email orang tua/wali: ' + em : 'Hubungi admin sekolah untuk mendaftarkan email orang tua.';
+  $('#piket').hidden = !c.guru_piket; $('#piket-no').textContent = c.guru_piket || '';
+  const la = +c.lat, ln = +c.lng;
+  if (!isNaN(la) && !isNaN(ln) && !$('#gframe').dataset.set) { $('#gframe').dataset.set = 1; $('#gframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${ln - .003},${la - .002},${ln + .003},${la + .002}&layer=mapnik&marker=${la},${ln}`; }
+  $('#geo-sub').textContent = 'Titik pusat: gerbang ' + (c.nama_sekolah || 'sekolah');
+  renderJendela();
+  if (pesan) stopKamera(); else if (!stream) mulaiKamera();
+}
+
+function renderJendela() {
+  if ($('#v-murid').hidden || !CFG.masuk_mulai) return;
+  const c = CFG, t = jamWita(), jam = t.slice(0, 5), masuk = JN === 'masuk', mulai = masuk ? c.masuk_mulai : c.pulang_mulai, tutup = masuk ? c.masuk_batas : c.pulang_akhir;
+  let chip, cls = 'green', bar = 0, tol = '', bcol = '#1D4ED8';
+  if (jam < mulai) { chip = 'Dibuka ' + (mnt(mulai) - mnt(jam)) + ' Menit Lagi'; cls = 'amber'; tol = (masuk ? 'Absen masuk' : 'Absen pulang') + ' dibuka pukul ' + fmt(mulai) + ' WITA'; }
+  else if (jam <= tutup) { const sisa = mnt(tutup) - mnt(jam); chip = '● Tersisa ' + sisa + ' Menit'; bar = (mnt(jam) - mnt(mulai)) / Math.max(1, mnt(tutup) - mnt(mulai)) * 100; tol = masuk ? 'Toleransi batas kedisiplinan: ' + sisa + ' menit' : 'Jendela absen pulang sedang berjalan'; }
+  else if (masuk && jam <= c.terlambat_batas) { chip = 'Fase Terlambat'; cls = 'amber'; bar = 100; bcol = '#D97706'; tol = 'Tercatat Terlambat · batas ' + fmt(c.terlambat_batas) + ' WITA'; }
+  else { chip = 'Ditutup'; cls = 'red'; bar = 100; bcol = '#DC2626'; tol = 'Jendela absen sudah ditutup'; }
+  $('#jw-judul').textContent = 'Jendela Absen ' + (masuk ? 'Masuk' : 'Pulang'); $('#jw-sisa').textContent = chip; $('#jw-sisa').className = 'chip ' + cls;
+  $('#jw-buka').textContent = fmt(mulai) + ' WITA'; $('#jw-tutup').textContent = 'Tutup: ' + fmt(tutup) + ' WITA'; $('#jw-tol').textContent = tol;
+  $('#jw-bar').style.width = bar.toFixed(0) + '%'; $('#jw-bar').style.background = bcol;
+  $('#m-tgl').textContent = new Date(Date.now() + off).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Makassar' });
+  $('#ch-net').textContent = '📶 Koneksi: ' + (navigator.onLine ? 'Online' : 'Offline');
+  if (stream) $('#wm').textContent = wmLines().join('\n');
+}
+const wmLines = () => {
+  const d = new Date(Date.now() + off), tg = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Makassar' }).toUpperCase().replace(/\s/g, '-');
+  return [(CFG.nama_sekolah || 'Absensi') + ' • ' + S.user.nama, jamWita() + ' WITA • ' + tg, gps ? 'LAT: ' + gps.latitude.toFixed(5) + ' | LNG: ' + gps.longitude.toFixed(5) : 'LAT/LNG: menunggu GPS…'];
+};
+
+function renderRingkasan() {
+  if (!RK) return;
+  const aktif = String(CFG.hari_aktif || '1,2,3,4,5').split(','), hi = hariIni();
+  $('#days').innerHTML = RK.pekan.filter(x => aktif.includes(String(x.hari))).map(x => {
+    const ic = x.status === 'Hadir' ? ['✔', 'g'] : x.status === 'Terlambat' ? ['⏱', 'a'] : (x.status === 'Izin' || x.status === 'Sakit') ? ['✚', 'v'] : x.status === 'Alpa' ? ['✕', 'r'] : x.tanggal === hi ? ['⋯', 'b'] : ['–', 'n'];
+    return `<div class="dy ${x.tanggal === hi ? 'now' : ''}"><small>${HARI[x.hari - 1].toUpperCase()}</small><b>${+x.tanggal.slice(8)}</b><i class="di ${ic[1]}">${ic[0]}</i><small>${esc(x.jam || (x.tanggal === hi && !x.status ? 'Proses' : '–'))}</small></div>`;
+  }).join('');
+  const cn = (l, n, u, col) => `<div class="cn"><small>${l}</small><b style="color:${col}">${n}</b><small>${u}</small></div>`;
+  $('#cnts').innerHTML = cn('Hadir', RK.hadir, 'Hari', '#047857') + cn('Terlambat', RK.terlambat, 'Kali', '#B45309') + cn('Izin/Skt', RK.izin, 'Hari', '#7C3AED') + cn('Alpa', RK.alpa, RK.alpa ? 'Hari' : 'Nihil', '#DC2626');
+  const tot = RK.hadir + RK.terlambat + RK.izin + RK.alpa; $('#pk-tingkat').textContent = tot ? 'Bulan ini ' + Math.round((RK.hadir + RK.terlambat) / tot * 100) + '%' : 'Belum ada data';
+}
+
+// ---------- Kamera, cahaya & GPS (inline) ----------
+async function mulaiKamera(devId) {
+  stopKamera();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('#cam-ready').textContent = 'Kamera tidak didukung'; $('#cam-ready').className = 'chip red'; return; }
+  try { stream = await navigator.mediaDevices.getUserMedia({ video: devId ? { deviceId: { exact: devId } } : { facingMode: 'user', width: { ideal: 640 } }, audio: false }); }
+  catch (e) { $('#cam-ready').textContent = 'Kamera tidak aktif'; $('#cam-ready').className = 'chip red'; $('#kirim-hint').textContent = 'Izinkan akses kamera & lokasi pada browser, lalu tekan ⟳.'; return toast('Kamera tidak bisa diakses. Izinkan akses kamera.', 'err'); }
+  $('#cam').srcObject = stream; $('#cam-ready').textContent = '● Kamera Siap'; $('#cam-ready').className = 'chip green';
+  try {
+    const cur = stream.getVideoTracks()[0].getSettings().deviceId, dv = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    $('#cam-dev').innerHTML = dv.map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === cur ? 'selected' : ''}>${esc(d.label || 'Kamera ' + (i + 1))}</option>`).join('');
+  } catch (e) { /* daftar perangkat opsional */ }
+  luxT = setInterval(ukurCahaya, 1500);
+  if (navigator.geolocation) watchId = navigator.geolocation.watchPosition(p => { gps = p.coords; renderGeo(); },
+    () => { $('#geo-badge').textContent = '⚠ Lokasi tidak tersedia'; $('#geo-badge').className = 'chip red'; $('#kirim-hint').textContent = 'Aktifkan GPS & izinkan akses lokasi.'; }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  perbaruiTombol();
+}
+function stopKamera() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; if (watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(watchId); watchId = null; clearInterval(luxT); gps = null; JRK = null; }
+$('#cam-ulang').onclick = () => { const v = $('#cam-dev').value; mulaiKamera(v && v.length > 20 ? v : undefined); };
+$('#cam-dev').onchange = e => mulaiKamera(e.target.value);
+
+function ukurCahaya() {
+  const v = $('#cam'); if (!v.videoWidth) return;
+  const c = ukurCahaya.c || (ukurCahaya.c = document.createElement('canvas')); c.width = 32; c.height = 24;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(v, 0, 0, 32, 24); const d = x.getImageData(0, 0, 32, 24).data; let t = 0;
+  for (let i = 0; i < d.length; i += 4) t += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
+  LUX = Math.round(t / (d.length / 4) / 255 * 100); const l = LUX < 25 ? 'Terlalu Gelap' : LUX > 85 ? 'Terlalu Terang' : 'Baik';
+  $('#lux').textContent = '☀ Sensor Cahaya: ' + l; $('#lux2').textContent = 'Pencahayaan ' + l + ' (' + LUX + '%)'; perbaruiTombol();
+}
+function renderGeo() {
+  const R = Number(CFG.radius); if (!gps) return;
+  JRK = Math.round(jarakM(gps.latitude, gps.longitude, +CFG.lat, +CFG.lng)); const dalam = JRK <= R;
+  $('#geo-badge').textContent = dalam ? 'Di Dalam Radius Sekolah ✅' : 'Di Luar Radius Sekolah ✕'; $('#geo-badge').className = 'chip ' + (dalam ? 'green' : 'red');
+  $('#gdist').textContent = `Jarak ke Gerbang: ${JRK} meter (Batas Maks: ${R} m)`; $('#ch-acc').textContent = '◎ Akurasi GPS: ' + gps.accuracy.toFixed(1) + ' m';
+  $('#gps-ov').textContent = dalam ? '✔ Lokasi Valid' : '✕ Di Luar Radius'; $('#gps-ov').className = dalam ? 'ok' : 'bad';
+  $('#zona-teks').textContent = dalam ? 'Dalam Radius ' + R + ' m' : 'Di Luar Radius (' + JRK + ' m)'; perbaruiTombol();
+}
+function perbaruiTombol() {
+  const c = CFG, jam = jamWita().slice(0, 5), R = Number(c.radius), masuk = JN === 'masuk';
+  const buka = masuk ? (jam >= c.masuk_mulai && jam <= c.terlambat_batas) : (jam >= c.pulang_mulai && jam <= c.pulang_akhir);
+  const h = !stream ? 'Menunggu kamera…' : !gps ? 'Menunggu lokasi GPS…' : JRK > R ? 'Anda berada di luar radius sekolah.' : !buka ? 'Di luar jam absen ' + (masuk ? 'masuk.' : 'pulang.') : '';
+  $('#btn-kirim').disabled = !!h; $('#kirim-hint').textContent = h || 'Tersinkronisasi otomatis via Google Sheets & Drive presensi sekolah.';
+}
+$('#btn-kirim').onclick = async () => {
+  const v = $('#cam'), c = document.createElement('canvas'), w = 480; c.width = w; c.height = Math.round(w * v.videoHeight / v.videoWidth) || 360;
+  const x = c.getContext('2d'); x.drawImage(v, 0, 0, c.width, c.height);
+  const L = wmLines(), th = L.length * 14 + 10; x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(0, c.height - th, c.width, th); x.fillStyle = '#fff'; x.font = '11px monospace';
+  L.forEach((t, i) => x.fillText(t, 8, c.height - th + 15 + i * 14)); // watermark waktu & koordinat ikut tersimpan di foto
+  const foto = c.toDataURL('image/jpeg', 0.6), lat = gps.latitude, lng = gps.longitude, jn = JN;
+  stopKamera();
+  try { const r = await api('absen', { jenis: jn, lat, lng, foto }); toast(r.message, 'ok'); RK = null; } catch (e) { /* toast sudah tampil */ }
+  muatBeranda();
+};
+
+// ---------- Riwayat, izin, profil ----------
 async function muatRiwayat() {
   const j = await api('riwayat', { bulan: $('#r-bulan').value });
   $('#tb-riwayat').innerHTML = j.data.absen.map(r => `<tr><td>${esc(r.tanggal)}</td><td class="tn">${esc(r.jam_masuk || '–')}</td><td class="tn">${esc(r.jam_pulang || '–')}</td><td>${badge(r.status)}</td></tr>`).join('') || '<tr><td colspan="4">Belum ada data.</td></tr>';
   $('#tb-izinsaya').innerHTML = j.data.izin.map(r => `<tr><td>${esc(r.tgl_izin)}</td><td>${esc(r.jenis)}</td><td>${badge(r.status)}</td><td>${esc(r.catatan)}</td></tr>`).join('') || '<tr><td colspan="4">Belum ada pengajuan.</td></tr>';
 }
 $('#r-bulan').onchange = muatRiwayat;
-
 $('#f-izin').onsubmit = async e => {
   e.preventDefault();
   const f = $('#z-file').files[0]; let berkas = null;
@@ -102,31 +227,13 @@ $('#f-izin').onsubmit = async e => {
     berkas = await new Promise(res => { const r = new FileReader(); r.onload = () => res({ nama: f.name, mime: f.type, b64: r.result }); r.readAsDataURL(f); });
   }
   const j = await api('izin', { jenis: $('#z-jenis').value, tanggal: $('#z-tgl').value, alasan: $('#z-alasan').value, berkas });
-  toast(j.message, 'ok'); e.target.reset(); $('#z-tgl').value = hariIni();
+  toast(j.message, 'ok'); e.target.reset(); $('#z-tgl').value = hariIni(); RK = null;
 };
-
-// ---------- Kamera + GPS ----------
-async function bukaKamera(j) {
-  jenis = j; gps = null; $('#cam-judul').textContent = 'Absen ' + (j === 'masuk' ? 'Masuk' : 'Pulang'); $('#cam-ok').disabled = true;
-  $('#gps').textContent = 'Mencari lokasi…'; $('#modal').hidden = false;
-  try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 } }, audio: false }); $('#cam').srcObject = stream; }
-  catch (e) { toast('Kamera tidak bisa diakses. Izinkan akses kamera.', 'err'); return tutupKamera(); }
-  watchId = navigator.geolocation.watchPosition(p => {
-    gps = p.coords; $('#gps').textContent = '📍 Lokasi ditemukan (akurasi ±' + Math.round(p.coords.accuracy) + ' m)'; $('#cam-ok').disabled = false;
-  }, () => { $('#gps').textContent = '⚠️ Lokasi tidak tersedia. Aktifkan GPS & izinkan lokasi.'; }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
-}
-function stopKamera() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null; }
-function tutupKamera() { stopKamera(); $('#modal').hidden = true; }
-$('#btn-masuk').onclick = () => bukaKamera('masuk');
-$('#btn-pulang').onclick = () => bukaKamera('pulang');
-$('#cam-batal').onclick = tutupKamera;
-$('#cam-ok').onclick = async () => {
-  const v = $('#cam'), c = document.createElement('canvas'), w = 480; c.width = w; c.height = Math.round(w * v.videoHeight / v.videoWidth) || 640;
-  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
-  const foto = c.toDataURL('image/jpeg', 0.6), lat = gps.latitude, lng = gps.longitude;
-  tutupKamera();
-  try { const r = await api('absen', { jenis, lat, lng, foto }); toast(r.message, 'ok'); } catch (e) { /* toast sudah tampil */ }
-  muatBeranda();
+function renderProfil() { const u = S.user; $('#pf-nama').textContent = u.nama; $('#pf-nis').textContent = u.id; $('#pf-kelas').textContent = u.kelas; $('#pf-email').textContent = u.email || 'Belum terdaftar'; }
+$('#f-sandi').onsubmit = async e => {
+  e.preventDefault();
+  if ($('#sd-baru').value !== $('#sd-ulang').value) return toast('Kata sandi baru dan pengulangannya tidak sama.', 'err');
+  const j = await api('sandi', { lama: $('#sd-lama').value, baru: $('#sd-baru').value }); toast(j.message, 'ok'); e.target.reset();
 };
 
 // ---------- Admin ----------
@@ -283,7 +390,7 @@ $('#izin-list').onclick = e => izinAksi(e, muatIzinAdmin);
 const SET = [['NAMA_SEKOLAH', 'Nama sekolah', 'text'], ['LAT', 'Latitude gerbang sekolah', 'text'], ['LNG', 'Longitude gerbang sekolah', 'text'],
   ['RADIUS', 'Radius absen (meter, 10–500)', 'number'], ['MASUK_MULAI', 'Absen masuk dibuka', 'time'], ['MASUK_BATAS', 'Batas tepat waktu (setelahnya Terlambat)', 'time'],
   ['TERLAMBAT_BATAS', 'Batas terlambat (setelahnya Alpa)', 'time'], ['PULANG_MULAI', 'Absen pulang dibuka', 'time'], ['PULANG_AKHIR', 'Absen pulang ditutup', 'time'],
-  ['HARI_LIBUR', 'Hari libur (yyyy-mm-dd, pisahkan dengan koma)', 'text']];
+  ['HARI_LIBUR', 'Hari libur (yyyy-mm-dd, pisahkan dengan koma)', 'text'], ['GURU_PIKET', 'Guru piket harian (nama / no. telepon)', 'text']];
 async function muatSetting() {
   const j = await api('setGet');
   $('#set-form').innerHTML = '<h2>Pengaturan Sekolah & Absensi</h2>' + SET.map(f => `<label>${f[1]}<input id="s-${f[0]}" type="${f[2]}" value="${esc(j.data[f[0]])}" ${f[2] === 'number' ? 'min="10" max="500"' : ''}></label>`).join('')
@@ -293,7 +400,7 @@ async function muatSetting() {
 $('#set-form').onsubmit = async e => {
   e.preventDefault(); const d = {}; SET.forEach(f => d[f[0]] = $('#s-' + f[0]).value);
   d.HARI_AKTIF = $$('.hr:checked').map(x => x.value).join(',');
-  const j = await api('setSimpan', d); toast(j.message, 'ok'); $('#sekolah').textContent = $('#sekolah2').textContent = d.NAMA_SEKOLAH;
+  const j = await api('setSimpan', d); toast(j.message, 'ok'); setSekolah(d.NAMA_SEKOLAH);
 };
 $('#set-form').onclick = e => {
   if (e.target.id !== 's-gps') return;
@@ -344,7 +451,7 @@ $('#imp-go').onclick = async () => {
   if (GAS_URL.indexOf('http') !== 0) { tampil('login'); return toast('GAS_URL belum diisi di js/config.js', 'err'); }
   try {
     const r = await fetch(GAS_URL + '?action=config'), j = await r.json();
-    CFG = j.data; off = CFG.server_ms - Date.now(); $('#sekolah').textContent = $('#sekolah2').textContent = CFG.nama_sekolah; isiLogin();
+    CFG = j.data; off = CFG.server_ms - Date.now(); setSekolah(CFG.nama_sekolah); isiLogin();
   } catch (e) { toast('Tidak dapat terhubung ke server.', 'err'); }
   if (S) mulai(); else tampil('login');
 })();
