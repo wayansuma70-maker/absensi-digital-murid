@@ -130,3 +130,44 @@ body.is-admin{background:#F4F7FB}body.is-admin main{max-width:none;padding:0}bod
   #snav{flex-direction:row}#snav button{white-space:nowrap}.gbox,.sbrand small{display:none}.atop,.acont{padding:12px}.auser{margin-left:0}}
 @media(max-width:520px){.kpis{grid-template-columns:1fr}.hl h2{font-size:19px;line-height:26px}}
 @media print{.side,.atop,.hbtn,.filters4,.actions,.btn{display:none!important}.adm{display:block}body.is-admin{background:#fff}.card{border:0;box-shadow:none}}
+
+/* ===== LOGIN (gaya EduPresensi) ===== */
+body.is-login{background:#F5F8FF}body.is-login .top{display:none}body.is-login main{max-width:1500px;padding:20px 40px 40px}
+.lg-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px}
+.logo2.big{width:46px;height:46px;background:#0B4FD6;font-size:22px;border-radius:12px}
+.lg-card{display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1fr);border-radius:36px;overflow:hidden;background:#fff;box-shadow:0 30px 60px -24px rgba(30,64,175,.3);min-height:660px}
+.lg-left{padding:44px;color:#fff;display:flex;flex-direction:column;gap:18px;
+  background:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(160deg,#0B4FD6,#0A3FB8 55%,#1556DB)}
+.lg-badge{align-self:flex-start;background:rgba(255,255,255,.14);border-radius:999px;padding:8px 16px;font:600 13px Inter}
+.lg-left h1{color:#fff;font-size:clamp(28px,3.1vw,46px);line-height:1.15;font-weight:800;margin:6px 0 0;letter-spacing:-.02em}
+.lg-left p{color:#C7D7FF;font-size:15px;line-height:24px;margin:0}
+.feat{display:grid;gap:12px;margin-top:22px}
+.fc{display:flex;gap:14px;align-items:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px}
+.fc div{flex:1;min-width:0}.fc b{display:block;font:700 16px 'Plus Jakarta Sans';color:#fff}.fc small{color:#C7D7FF;font-size:12px}
+.fi{width:46px;height:46px;border-radius:12px;background:rgba(45,212,191,.25);color:#5EEAD4;display:grid;place-items:center;font-size:20px;flex:none}
+.fb{font-style:normal;font:700 11px Inter;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 12px;white-space:nowrap}
+.fb.solid{background:#34D399;color:#064E3B}.fb.txt{background:none;color:#6EE7B7}
+.lclock{margin-top:auto;display:flex;align-items:center;gap:14px;background:rgba(2,24,89,.55);border-radius:16px;padding:14px 18px}
+.lclock .fi{background:rgba(255,255,255,.12);color:#fff}.lclock small{display:block;font:700 11px Inter;letter-spacing:.05em;color:#C7D7FF}
+.lclock b{font:800 20px 'Plus Jakarta Sans';font-variant-numeric:tabular-nums}.lclock .jam::after{content:' WITA'}
+.lpill{margin-left:auto;background:rgba(255,255,255,.14);border-radius:999px;padding:8px 14px;font:700 13px Inter;white-space:nowrap}
+.lg-right{padding:44px 56px;display:flex;flex-direction:column}
+.rh{display:flex;justify-content:space-between}.rh small{font:700 12px Inter;letter-spacing:.06em;color:var(--ink2)}.rh .blue{color:#0B4FD6}
+.lg-right h2{font-size:34px;line-height:42px;font-weight:800;letter-spacing:-.02em;margin:4px 0 6px}.sub{color:var(--ink3);font-size:15px;margin:0 0 22px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#EEF2FB;border-radius:16px;padding:6px;margin-bottom:22px}
+.seg button{min-height:48px;border:0;background:none;border-radius:12px;font:700 15px 'Plus Jakarta Sans';color:var(--ink2);cursor:pointer}
+.seg .on{background:#fff;color:#0B4FD6;box-shadow:0 2px 8px rgba(15,23,42,.1)}.seg i{font-style:normal;font:700 11px Inter;background:#DBE7FF;color:#1D4ED8;border-radius:999px;padding:3px 10px;margin-left:6px}
+.fl{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 8px}.fl label{margin:0;font:700 15px 'Plus Jakarta Sans';color:var(--ink)}.fl small{color:var(--ink3);font-size:12px}.fl a{color:#0B4FD6;font:700 13px Inter;text-decoration:none}
+.inp{display:flex;align-items:center;gap:10px;background:#F1F5FD;border-radius:12px;padding:0 14px;min-height:54px;border:1.5px solid transparent}
+.inp:focus-within{background:#fff;border-color:#1D4ED8;box-shadow:0 0 0 3px rgba(29,78,216,.15)}
+.inp input{margin:0;border:0;background:transparent;min-height:50px;padding:0;box-shadow:none!important;font-size:15px}
+.inp button{background:none;border:0;font-size:18px;cursor:pointer;opacity:.7}
+.hint{font-size:12px;color:var(--ink3);margin:8px 0 18px}
+.rowx{display:flex;justify-content:space-between;align-items:center;margin:16px 0 18px;flex-wrap:wrap;gap:8px}
+.chk{display:flex;align-items:center;gap:8px;margin:0;font-weight:500;font-size:14px}.chk input{width:auto;min-height:0;margin:0}
+.dev{color:#047857;font:700 12px Inter}
+.bigbtn{width:100%;min-height:56px;border:0;border-radius:14px;background:#0B4FD6;color:#fff;font:700 16px 'Plus Jakarta Sans';cursor:pointer;box-shadow:0 10px 20px -8px rgba(11,79,214,.6)}.bigbtn:hover{background:#0A44BC}
+.foot{margin-top:auto;padding-top:26px}.fr{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-bottom:10px;gap:8px;flex-wrap:wrap}.fr .gt{color:#047857;font-weight:600}
+.help{display:flex;justify-content:space-between;gap:10px;background:#F1F5FD;border-radius:12px;padding:12px 16px;font-size:13px;flex-wrap:wrap}.help a{color:#0B4FD6;font-weight:700;text-decoration:none}
+@media(max-width:900px){body.is-login main{padding:12px}.lg-card{grid-template-columns:1fr;border-radius:24px;min-height:0}.lg-left{padding:24px;gap:10px}
+  .feat,.lg-left p,.lclock{display:none}.lg-left h1{font-size:24px}.lg-right{padding:24px 20px}.lg-right h2{font-size:26px}.lg-top{margin-bottom:16px}}
