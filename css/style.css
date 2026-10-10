@@ -61,3 +61,4 @@ td small{display:block;color:var(--ink3)}.tn{font-variant-numeric:tabular-nums}
 .steps{padding-left:20px;margin:0 0 12px}.steps li{margin-bottom:6px}
 #imp-prev{margin:12px 0}#imp-hasil{margin-top:14px}.ok-t{color:#047857;font-weight:600}.err-t{color:var(--rose)}
 #set-form .actions{margin-top:8px}
+.hari{border:1px solid var(--line);border-radius:8px;margin:0 0 12px;padding:10px 12px}.hari legend{font-weight:600;font-size:13px;padding:0 6px}.hari label{display:inline-flex;gap:6px;align-items:center;margin:0 16px 6px 0}.hari input{width:auto;min-height:0;margin:0}
