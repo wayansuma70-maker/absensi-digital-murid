@@ -7,18 +7,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="logo">🎓</span><div><b id="sekolah">Absensi Digital</b><small>Absensi Digital Murid</small></div></div>
+  <div class="brand"><span class="logo">🎓</span><div><b id="sekolah" class="js-sekolah">Absensi Digital</b><small>Absensi Digital Murid</small></div></div>
   <div id="userbox" hidden><span id="uname"></span><button class="btn ghost sm" id="btn-logout">Keluar</button></div>
 </header>
 
 <main>
 <!-- LOGIN -->
 <section id="v-login" class="lg">
-  <div class="lg-top"><div class="brand"><span class="logo2 big">🎓</span><div><b id="lg-sekolah">Absensi Digital</b><small>ABSENSI DIGITAL MURID</small></div></div><span class="chip green">🛡 Presensi Terverifikasi</span></div>
+  <div class="lg-top"><div class="brand"><span class="logo2 big">🎓</span><div><b id="lg-sekolah" class="js-sekolah">Absensi Digital</b><small>ABSENSI DIGITAL MURID</small></div></div><span class="chip green">🛡 Presensi Terverifikasi</span></div>
   <div class="lg-card">
     <div class="lg-left">
       <span class="lg-badge">✔ Aplikasi Absensi Digital Resmi Sekolah</span>
@@ -53,38 +53,86 @@
 </section>
 
 <!-- MURID -->
-<section id="v-murid" hidden>
-  <div class="hero">
-    <h1>Halo, <span id="m-nama"></span> 👋</h1>
-    <p id="m-kelas" class="muted-w"></p>
-    <div class="tiles">
-      <div class="tile"><small>JAM SEKARANG (WITA)</small><div class="clock jam">--:--:--</div></div>
-      <div class="tile"><small>STATUS HARI INI</small><div id="st-hari">…</div></div>
-      <div class="tile"><small>JENDELA ABSEN MASUK</small><div class="win" id="win">…</div><small id="rad"></small></div>
-    </div>
-    <div class="actions">
-      <button class="btn amber" id="btn-masuk" disabled>📷 Absen Masuk</button>
-      <button class="btn white" id="btn-pulang" disabled>🏠 Absen Pulang</button>
+<section id="v-murid" class="adm" hidden>
+  <aside class="side">
+    <div class="sbrand"><span class="logo2">🎓</span><div><b>Absensi Digital</b><small>PORTAL MURID</small></div></div>
+    <div class="sch"><b class="js-sekolah">Sekolah</b><small id="m-ta"></small></div>
+    <nav id="mnav">
+      <button class="on" data-p="beranda">☝ Beranda & Absensi</button>
+      <button data-p="riwayat">🗓 Riwayat Kehadiran</button>
+      <button data-p="izin">📝 Ajukan Izin/Sakit</button>
+      <button data-p="profil">👤 Profil & Akun</button>
+    </nav>
+    <div class="zona"><b>ZONA GEOFENCE</b><span id="zona-teks">Radius …</span></div>
+    <button class="klr" id="m-keluar">⎋ Keluar Portal</button>
+  </aside>
+  <div class="amain">
+    <header class="atop">
+      <div class="wpill">🕒 Waktu Resmi: <b class="jam">--:--:--</b> WITA <i class="chip green">AKURAT</i></div>
+      <button class="bell" id="m-help" title="Bantuan">❓</button>
+      <div class="auser"><div style="text-align:right"><b id="mu-nama"></b><small id="mu-info"></small></div><span class="ava" id="mu-ava" style="background:#DBEAFE">M</span></div>
+    </header>
+    <div class="acont">
+      <div class="mpage" id="m-beranda">
+        <div class="card mh">
+          <div class="mhl"><h1>Halo, <span id="m-nama"></span>! 👋</h1> <span class="chip red" id="m-chip">Belum Absen Masuk</span><p id="m-info"></p></div>
+          <div class="mhr">
+            <div class="wr"><small><span>⏱ WAKTU RESMI PRESENSI</span><i class="chip blue">WITA (UTC+8)</i></small><div class="bigclock"><b class="jam">--:--:--</b> <span>WITA</span></div><small id="m-tgl" style="display:block;font-weight:500"></small></div>
+            <div class="jw"><div class="jwh"><span id="jw-judul">Jendela Absen Masuk</span><i class="chip green" id="jw-sisa">…</i></div><div class="jwt"><span id="jw-buka"></span><span id="jw-tutup"></span></div><div class="pbar"><i id="jw-bar"></i></div><small id="jw-tol" style="display:block;margin-top:6px;font-weight:600"></small></div>
+          </div>
+        </div>
+        <div class="mgrid">
+          <div class="card">
+            <div class="atabs"><button id="at-masuk" class="on">Absen Masuk<small id="at-m-t"></small></button><button id="at-pulang">🔒 Absen Pulang<small id="at-p-t"></small></button><span class="chip blue" id="cam-ready" style="align-self:center">Kamera …</span></div>
+            <div id="done-msg" class="donebox" hidden></div>
+            <div id="cam-area">
+              <div class="devrow"><span>📷 Perangkat:</span><select id="cam-dev"><option>Memuat kamera…</option></select><span class="chip" id="lux" style="background:#fff">☀ Sensor Cahaya …</span><button type="button" class="btn ghost sm" id="cam-ulang" title="Mulai ulang kamera">⟳</button></div>
+              <div class="camw"><video id="cam" autoplay playsinline muted></video>
+                <div class="ov"><span>● REC LIVE | <b id="lux2">Pencahayaan …</b></span><span class="ok" id="gps-ov">Mencari lokasi…</span></div>
+                <div class="oval"></div><span class="plabel">POSISIKAN WAJAH</span><div class="wm" id="wm"></div></div>
+              <div class="geo"><div class="gh"><span class="gi">📍</span><div><b>Verifikasi Geofence Sekolah</b><small id="geo-sub">Titik pusat: lokasi sekolah</small></div><i class="chip" id="geo-badge">Mencari lokasi…</i></div>
+                <div class="gmap" id="gmap"><iframe id="gframe" title="Peta lokasi sekolah" loading="lazy"></iframe><span class="gdist" id="gdist">Jarak ke Gerbang: –</span></div>
+                <div class="chips3"><span id="ch-acc">◎ Akurasi GPS: –</span><span id="ch-rad">🛡 Batas radius: –</span><span id="ch-net">📶 Koneksi: –</span></div></div>
+              <button class="bigbtn" id="btn-kirim" type="button" disabled style="margin-top:16px">📷 Ambil Foto & Kirim Presensi Masuk Sekarang</button>
+              <p class="muted" id="kirim-hint" style="text-align:center;margin:8px 0 0;font-size:12px">Menunggu kamera & lokasi…</p>
+            </div>
+          </div>
+          <div class="mside">
+            <div class="card"><div class="ch"><div><h2>Status Kehadiran Pekan Ini</h2></div><span class="chip green" id="pk-tingkat">…</span></div>
+              <div class="days" id="days"><small class="muted">Memuat…</small></div><div class="cnts" id="cnts"></div></div>
+            <div class="card"><div class="ch"><div><h2>Pengumuman & Layanan Cepat</h2></div></div>
+              <div class="qs"><span class="fi" style="background:#EDE9FE;color:#7C3AED">✚</span><div><b>Berhalangan Hadir Hari Ini?</b><small>Unggah surat sakit dokter atau surat wali.</small></div><button class="btn soft sm" id="m-ajukan">Ajukan Izin</button></div>
+              <div class="qs"><span class="fi" style="background:#D1FAE5;color:#047857">✉</span><div><b id="ortu-judul">Notifikasi Orang Tua</b><small id="ortu-teks"></small></div></div>
+              <div class="qs" id="piket" hidden><span>📞 Guru Piket Harian:</span><b id="piket-no" style="margin-left:auto"></b></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mpage" id="m-riwayat" hidden><div class="card"><h2>Riwayat Kehadiran</h2>
+        <input id="r-bulan" type="month" style="max-width:220px"><div class="scroll"><table><thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead><tbody id="tb-riwayat"></tbody></table></div>
+        <h2>Pengajuan Izin / Sakit</h2><div class="scroll"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Status</th><th>Catatan</th></tr></thead><tbody id="tb-izinsaya"></tbody></table></div></div></div>
+      <div class="mpage" id="m-izin" hidden><form class="card" id="f-izin" style="max-width:560px"><h2>Ajukan Izin / Sakit</h2>
+        <label>Jenis<select id="z-jenis"><option>Izin</option><option>Sakit</option></select></label>
+        <label>Tanggal<input id="z-tgl" type="date" required></label>
+        <label>Alasan<textarea id="z-alasan" rows="3" required></textarea></label>
+        <label>Surat / bukti (foto atau PDF, maks 3 MB)<input id="z-file" type="file" accept="image/*,.pdf"></label>
+        <button class="btn primary" type="submit">Kirim Pengajuan</button></form></div>
+      <div class="mpage" id="m-profil" hidden>
+        <div class="card" style="max-width:560px"><h2>Profil Murid</h2><table><tbody>
+          <tr><th>Nama</th><td id="pf-nama"></td></tr><tr><th>NIS</th><td id="pf-nis"></td></tr><tr><th>Kelas</th><td id="pf-kelas"></td></tr><tr><th>Email orang tua</th><td id="pf-email"></td></tr></tbody></table></div>
+        <form class="card" id="f-sandi" style="max-width:560px"><h2>Ganti Kata Sandi</h2>
+          <label>Kata sandi lama<input id="sd-lama" type="password" required autocomplete="current-password"></label>
+          <label>Kata sandi baru (min. 6 karakter)<input id="sd-baru" type="password" required minlength="6" autocomplete="new-password"></label>
+          <label>Ulangi kata sandi baru<input id="sd-ulang" type="password" required minlength="6" autocomplete="new-password"></label>
+          <button class="btn primary" type="submit">Simpan Kata Sandi</button></form>
+      </div>
     </div>
   </div>
-  <nav class="tabs" data-g="m"><button class="on" data-t="beranda">Beranda</button><button data-t="izin">Izin / Sakit</button><button data-t="riwayat">Riwayat</button></nav>
-  <div class="pane" data-g="m" id="t-beranda"><div class="card"><h2>Cara absen</h2>
-    <p>Tekan <b>Absen Masuk</b> atau <b>Absen Pulang</b>, izinkan kamera dan lokasi, lalu ambil foto selfie di area sekolah.</p></div></div>
-  <div class="pane" data-g="m" id="t-izin" hidden><form class="card" id="f-izin"><h2>Ajukan Izin / Sakit</h2>
-    <label>Jenis<select id="z-jenis"><option>Izin</option><option>Sakit</option></select></label>
-    <label>Tanggal<input id="z-tgl" type="date" required></label>
-    <label>Alasan<textarea id="z-alasan" rows="3" required></textarea></label>
-    <label>Surat / bukti (foto atau PDF, maks 3 MB)<input id="z-file" type="file" accept="image/*,.pdf"></label>
-    <button class="btn primary" type="submit">Kirim Pengajuan</button></form></div>
-  <div class="pane" data-g="m" id="t-riwayat" hidden><div class="card"><h2>Riwayat Kehadiran</h2>
-    <input id="r-bulan" type="month"><div class="scroll"><table><thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead><tbody id="tb-riwayat"></tbody></table></div>
-    <h2>Pengajuan Izin / Sakit</h2><div class="scroll"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Status</th><th>Catatan</th></tr></thead><tbody id="tb-izinsaya"></tbody></table></div></div></div>
 </section>
 
 <!-- ADMIN -->
 <section id="v-admin" class="adm" hidden>
   <aside class="side">
-    <div class="sbrand"><span class="logo2">🎓</span><div><b id="sekolah2">Absensi</b><small>Admin Portal (WITA)</small></div></div>
+    <div class="sbrand"><span class="logo2">🎓</span><div><b id="sekolah2" class="js-sekolah">Absensi</b><small>Admin Portal (WITA)</small></div></div>
     <nav id="snav">
       <button class="on" data-p="dasbor">▦ Dasbor Utama</button>
       <button data-p="kehadiran">☰ Data Kehadiran</button>
@@ -133,17 +181,10 @@
 </section>
 </main>
 
-<!-- KAMERA -->
-<div id="modal" hidden><div class="sheet">
-  <h2 id="cam-judul">Absen</h2>
-  <video id="cam" autoplay playsinline muted></video>
-  <p id="gps" class="muted">Mencari lokasi…</p>
-  <div class="actions"><button class="btn ghost" id="cam-batal">Batal</button><button class="btn primary" id="cam-ok" disabled>Ambil Foto & Kirim</button></div>
-</div></div>
 <div id="toast"></div><div id="loading" hidden><div class="spin"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/config.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>
