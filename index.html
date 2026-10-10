@@ -62,7 +62,7 @@
   <div class="hero"><h1>Dasbor Admin</h1>
     <div class="tiles"><div class="tile"><small>JAM SEKARANG (WITA)</small><div class="clock jam">--:--:--</div></div>
     <div class="tile"><small>TANGGAL REKAP</small><input id="a-tgl" type="date"></div></div></div>
-  <nav class="tabs" data-g="a"><button class="on" data-t="rekap">Rekap Kehadiran</button><button data-t="izinadm">Persetujuan Izin</button></nav>
+  <nav class="tabs" data-g="a"><button class="on" data-t="rekap">Rekap Kehadiran</button><button data-t="izinadm">Persetujuan Izin</button><button data-t="murid">Data Murid</button><button data-t="setting">Pengaturan</button></nav>
   <div class="pane" data-g="a" id="t-rekap">
     <div class="stats" id="stats"></div>
     <div class="card"><h2>Kehadiran per Kelas</h2><div id="chart"></div></div>
@@ -70,6 +70,13 @@
       <div class="scroll"><table><thead><tr><th>Murid</th><th>Kelas</th><th>Masuk</th><th>Pulang</th><th>Foto</th><th>Status</th></tr></thead><tbody id="tb-rekap"></tbody></table></div></div>
   </div>
   <div class="pane" data-g="a" id="t-izinadm" hidden><div id="izin-list"></div></div>
+  <div class="pane" data-g="a" id="t-murid" hidden><div class="card"><h2>Tambah Murid dari Excel</h2>
+    <ol class="steps"><li>Unduh template, lalu isi kolom <b>nis, nama, kelas, sandi, email_ortu</b>. Email orang tua wajib; sandi dikosongkan = sama dengan NIS.</li>
+    <li>Format kolom <b>nis</b> sebagai <b>Teks</b> agar angka 0 di depan tidak hilang.</li><li>Pilih file, periksa pratinjau, lalu klik <b>Impor Murid</b>. NIS yang sudah ada akan dilewati.</li></ol>
+    <div class="actions"><button class="btn ghost" id="imp-template" type="button">⬇️ Unduh Template</button></div>
+    <label style="margin-top:14px">File Excel (.xlsx, .xls, .csv)<input type="file" id="imp-file" accept=".xlsx,.xls,.csv"></label>
+    <div id="imp-prev"></div><button class="btn primary" id="imp-go" type="button" disabled>Impor Murid</button><div id="imp-hasil"></div></div></div>
+  <div class="pane" data-g="a" id="t-setting" hidden><form class="card" id="set-form"></form></div>
 </section>
 </main>
 
@@ -82,6 +89,7 @@
 </div></div>
 <div id="toast"></div><div id="loading" hidden><div class="spin"></div></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 </body>
