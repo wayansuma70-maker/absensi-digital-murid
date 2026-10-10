@@ -58,3 +58,6 @@ td small{display:block;color:var(--ink3)}.tn{font-variant-numeric:tabular-nums}
 .spin{width:40px;height:40px;border:4px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s .8s linear infinite}
 @keyframes s{to{transform:rotate(360deg)}}
 @media(max-width:600px){h1{font-size:22px}.clock{font-size:28px}.filters{grid-template-columns:1fr}.hero{padding:16px}}
+.steps{padding-left:20px;margin:0 0 12px}.steps li{margin-bottom:6px}
+#imp-prev{margin:12px 0}#imp-hasil{margin-top:14px}.ok-t{color:#047857;font-weight:600}.err-t{color:var(--rose)}
+#set-form .actions{margin-top:8px}
