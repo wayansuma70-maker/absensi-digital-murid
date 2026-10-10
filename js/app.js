@@ -6,7 +6,7 @@ if (!document.getElementById('snav')) { // index.html usang (belum sesuai versi 
 // Absensi Digital Murid — Frontend (vanilla JS, fetch ke GAS)
 // ============================================================
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-let S = JSON.parse(localStorage.getItem('sesi') || 'null'), off = 0, CFG = {}, stream = null, gps = null, watchId = null, jenis = 'masuk', REK = null;
+let S = JSON.parse(localStorage.getItem('sesi') || sessionStorage.getItem('sesi') || 'null'), off = 0, CFG = {}, stream = null, gps = null, watchId = null, jenis = 'masuk', REK = null;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const badge = s => `<span class="badge ${esc(s)}">${esc(s)}</span>`;
 const hariIni = () => new Date(Date.now() + off).toLocaleDateString('sv-SE', { timeZone: 'Asia/Makassar' });
@@ -28,7 +28,7 @@ async function api(action, data, bg) {
   finally { $('#loading').hidden = true; }
 }
 
-function tampil(v) { ['login', 'murid', 'admin'].forEach(x => $('#v-' + x).hidden = x !== v); $('#userbox').hidden = v === 'login'; document.body.classList.toggle('is-admin', v === 'admin'); }
+function tampil(v) { ['login', 'murid', 'admin'].forEach(x => $('#v-' + x).hidden = x !== v); $('#userbox').hidden = v === 'login'; document.body.classList.toggle('is-admin', v === 'admin'); document.body.classList.toggle('is-login', v === 'login'); }
 function tick() {
   const t = new Date(Date.now() + off).toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour12: false }).replace(/\./g, ':');
   $$('.jam').forEach(e => e.textContent = t);
@@ -36,15 +36,31 @@ function tick() {
 }
 
 // ---------- Login / sesi ----------
-$('#l-role').onchange = e => $('#l-idlabel').textContent = e.target.value === 'admin' ? 'ID Admin' : 'NIS';
+function setRole(r) {
+  const a = r === 'admin'; $('#l-role').value = r; $$('#seg button').forEach(x => x.classList.toggle('on', x.dataset.role === r));
+  $('#l-idlabel').textContent = a ? 'ID Admin' : 'Nomor Induk Siswa (NIS)'; $('#l-idhint').textContent = a ? 'ID dari pengelola aplikasi' : 'Sesuai Buku Induk';
+  $('#l-id').placeholder = a ? 'Masukkan ID Admin' : 'Masukkan NIS'; $('#l-hint2').textContent = a ? 'ⓘ Akun admin dibuat oleh pengelola aplikasi.' : 'ⓘ NIS didaftarkan oleh admin sekolah.';
+  $('#l-btn').textContent = 'Masuk sebagai ' + (a ? 'Admin' : 'Murid') + ' →';
+}
+$('#seg').onclick = e => { const b = e.target.closest('button'); if (b) setRole(b.dataset.role); };
+$('#l-eye').onclick = () => { const i = $('#l-sandi'); i.type = i.type === 'password' ? 'text' : 'password'; };
+$('#l-lupa').onclick = $('#l-bantu').onclick = e => { e.preventDefault(); toast('Hubungi Guru Piket atau Admin untuk mengatur ulang kata sandi.'); };
+$('#l-dev').textContent = '● ' + (window.matchMedia && matchMedia('(pointer:coarse)').matches ? 'Ponsel/Tablet Terdeteksi' : 'Komputer Terdeteksi');
+function isiLogin() {
+  const R = CFG.radius, tg = hariIni(), y = +tg.slice(0, 4);
+  $('#lg-sekolah').textContent = CFG.nama_sekolah; $('#lg-ta').textContent = 'T.A. ' + (+tg.slice(5, 7) >= 7 ? y + '/' + (y + 1) : (y - 1) + '/' + y);
+  $('#lg-desc').textContent = `Platform presensi berbasis Geofence GPS radius ${R} m dan swafoto yang tersinkronisasi otomatis dengan Google Sheets & Drive.`;
+  $('#ft-rad').textContent = 'AKTIF ' + R + 'M'; $('#ft-rad2').textContent = `Absen hanya sah di dalam radius ${R} m dari titik sekolah`;
+  $('#seg-n').textContent = CFG.jumlah_murid + ' Siswa'; $('#lg-jml').textContent = '👥 ' + CFG.jumlah_murid + ' Murid Terdaftar';
+}
 $('#f-login').onsubmit = async e => {
   e.preventDefault();
   const j = await api('login', { role: $('#l-role').value, id: $('#l-id').value, sandi: $('#l-sandi').value });
-  S = j.data; localStorage.setItem('sesi', JSON.stringify(S)); $('#l-sandi').value = ''; mulai();
+  S = j.data; ($('#l-ingat').checked ? localStorage : sessionStorage).setItem('sesi', JSON.stringify(S)); $('#l-sandi').value = ''; mulai();
 };
 function keluar(diam) {
   if (!diam && S) api('logout', {}, true).catch(() => {});
-  S = null; localStorage.removeItem('sesi'); stopKamera(); tampil('login');
+  S = null; localStorage.removeItem('sesi'); sessionStorage.removeItem('sesi'); stopKamera(); tampil('login');
 }
 $('#btn-logout').onclick = $('#a-logout').onclick = () => keluar();
 
@@ -328,7 +344,7 @@ $('#imp-go').onclick = async () => {
   if (GAS_URL.indexOf('http') !== 0) { tampil('login'); return toast('GAS_URL belum diisi di js/config.js', 'err'); }
   try {
     const r = await fetch(GAS_URL + '?action=config'), j = await r.json();
-    CFG = j.data; off = CFG.server_ms - Date.now(); $('#sekolah').textContent = $('#sekolah2').textContent = CFG.nama_sekolah;
+    CFG = j.data; off = CFG.server_ms - Date.now(); $('#sekolah').textContent = $('#sekolah2').textContent = CFG.nama_sekolah; isiLogin();
   } catch (e) { toast('Tidak dapat terhubung ke server.', 'err'); }
   if (S) mulai(); else tampil('login');
 })();
