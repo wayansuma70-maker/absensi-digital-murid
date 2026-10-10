@@ -155,10 +155,12 @@ const SET = [['NAMA_SEKOLAH', 'Nama sekolah', 'text'], ['LAT', 'Latitude gerbang
 async function muatSetting() {
   const j = await api('setGet');
   $('#set-form').innerHTML = '<h2>Pengaturan Sekolah & Absensi</h2>' + SET.map(f => `<label>${f[1]}<input id="s-${f[0]}" type="${f[2]}" value="${esc(j.data[f[0]])}" ${f[2] === 'number' ? 'min="10" max="500"' : ''}></label>`).join('')
+    + '<fieldset class="hari"><legend>Hari sekolah</legend>' + ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map((h, i) => `<label><input type="checkbox" class="hr" value="${i + 1}" ${(j.data.HARI_AKTIF || '1,2,3,4,5,6').split(',').includes(String(i + 1)) ? 'checked' : ''}> ${h}</label>`).join('') + '</fieldset>'
     + '<div class="actions"><button type="button" class="btn ghost" id="s-gps">📍 Pakai lokasi saya</button><button class="btn primary" type="submit">Simpan Pengaturan</button></div>';
 }
 $('#set-form').onsubmit = async e => {
   e.preventDefault(); const d = {}; SET.forEach(f => d[f[0]] = $('#s-' + f[0]).value);
+  d.HARI_AKTIF = $$('.hr:checked').map(x => x.value).join(',');
   const j = await api('setSimpan', d); toast(j.message, 'ok'); $('#sekolah').textContent = d.NAMA_SEKOLAH;
 };
 $('#set-form').onclick = e => {
