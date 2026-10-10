@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 <header class="top">
@@ -58,25 +58,54 @@
 </section>
 
 <!-- ADMIN -->
-<section id="v-admin" hidden>
-  <div class="hero"><h1>Dasbor Admin</h1>
-    <div class="tiles"><div class="tile"><small>JAM SEKARANG (WITA)</small><div class="clock jam">--:--:--</div></div>
-    <div class="tile"><small>TANGGAL REKAP</small><input id="a-tgl" type="date"></div></div></div>
-  <nav class="tabs" data-g="a"><button class="on" data-t="rekap">Rekap Kehadiran</button><button data-t="izinadm">Persetujuan Izin</button><button data-t="murid">Data Murid</button><button data-t="setting">Pengaturan</button></nav>
-  <div class="pane" data-g="a" id="t-rekap">
-    <div class="stats" id="stats"></div>
-    <div class="card"><h2>Kehadiran per Kelas</h2><div id="chart"></div></div>
-    <div class="card"><div class="filters"><select id="f-kelas"><option value="">Semua kelas</option></select><input id="f-cari" placeholder="Cari nama / NIS"></div>
-      <div class="scroll"><table><thead><tr><th>Murid</th><th>Kelas</th><th>Masuk</th><th>Pulang</th><th>Foto</th><th>Status</th></tr></thead><tbody id="tb-rekap"></tbody></table></div></div>
+<section id="v-admin" class="adm" hidden>
+  <aside class="side">
+    <div class="sbrand"><span class="logo2">🎓</span><div><b id="sekolah2">Absensi</b><small>Admin Portal (WITA)</small></div></div>
+    <nav id="snav">
+      <button class="on" data-p="dasbor">▦ Dasbor Utama</button>
+      <button data-p="kehadiran">☰ Data Kehadiran</button>
+      <button data-p="izin">📄 Persetujuan Izin <i class="nb" id="nb-izin" hidden></i></button>
+      <button data-p="cetak">🖨 Rekap & Cetak PDF</button>
+      <button data-p="murid">👥 Kelola Murid</button>
+      <button data-p="setting">⚙ Pengaturan Sekolah</button>
+    </nav>
+    <div class="gbox"><b>INTEGRASI GOOGLE</b><span>🟢 Sheets & Drive Terkoneksi</span><span>🕒 Zona WITA (UTC+8)</span><span id="g-kuota">✉ Kuota Email …</span></div>
+  </aside>
+  <div class="amain">
+    <header class="atop">
+      <div class="crumb"><small>Admin / <span id="crumb">Dasbor Harian</span></small><b id="atime">…</b></div>
+      <div class="search"><input id="a-cari" placeholder="🔍 Cari NIS, nama murid…"></div>
+      <span class="rad" id="a-rad">● Radius Sekolah</span>
+      <button class="bell" id="bell" title="Pengajuan izin">🔔<i id="bell-dot" hidden></i></button>
+      <div class="auser"><span class="ava" id="au-ava" style="background:#DBEAFE">A</span><div><b id="au-nama"></b><small>Admin Guru / Operator</small></div><button class="btn ghost sm" id="a-logout">Keluar</button></div>
+    </header>
+    <div class="acont">
+      <div class="apage" id="p-dasbor">
+        <div class="card hero2">
+          <div class="hl"><div class="chips"><span class="chip blue">● Zona Waktu WITA (Makassar/UTC+8)</span><span class="chip red" id="fase">…</span></div>
+            <h2 id="hero-judul">Memuat…</h2><p class="warn">⚡ <b>Peringatan Otomatis:</b> <span id="hero-warn"></span></p></div>
+          <div class="hbtn"><button class="btn soft" id="b-sync">⟳ Sinkronkan Sheets</button><button class="btn soft" id="b-notif">✉ Kirim Notifikasi Wali</button><button class="btn primary2" id="b-cetak">🖨 Cetak Rekap Harian</button></div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+        <div class="grid2"><div class="card" id="c-ang"></div><div class="card" id="c-geo"></div></div>
+        <div class="grid3"><div class="card" id="c-log"></div><div class="card" id="c-izin"></div></div>
+      </div>
+      <div class="apage" id="p-kehadiran" hidden><div class="card"><h2>Data Kehadiran</h2>
+        <div class="filters4"><input id="a-tgl" type="date"><select id="f-kelas"><option value="">Semua kelas</option></select>
+          <select id="f-status"><option value="">Semua status</option><option>Belum</option><option>Hadir</option><option>Terlambat</option><option>Izin</option><option>Sakit</option><option>Alpa</option></select>
+          <input id="f-cari" placeholder="Cari nama / NIS"></div>
+        <div class="scroll"><table><thead><tr><th>Murid</th><th>Kelas</th><th>Masuk</th><th>Pulang</th><th>Foto</th><th>Status</th></tr></thead><tbody id="tb-rekap"></tbody></table></div>
+        <div class="actions"><button class="btn primary" onclick="window.print()">🖨 Cetak / Simpan PDF</button></div></div></div>
+      <div class="apage" id="p-izin" hidden><div id="izin-list"></div></div>
+      <div class="apage" id="p-murid" hidden><div class="card"><h2>Tambah Murid dari Excel</h2>
+        <ol class="steps"><li>Unduh template, lalu isi kolom <b>nis, nama, kelas, sandi, email_ortu</b>. Email orang tua wajib; sandi dikosongkan = sama dengan NIS.</li>
+        <li>Format kolom <b>nis</b> sebagai <b>Teks</b> agar angka 0 di depan tidak hilang.</li><li>Pilih file, periksa pratinjau, lalu klik <b>Impor Murid</b>. NIS yang sudah ada akan dilewati.</li></ol>
+        <div class="actions"><button class="btn ghost" id="imp-template" type="button">⬇️ Unduh Template</button></div>
+        <label style="margin-top:14px">File Excel (.xlsx, .xls, .csv)<input type="file" id="imp-file" accept=".xlsx,.xls,.csv"></label>
+        <div id="imp-prev"></div><button class="btn primary" id="imp-go" type="button" disabled>Impor Murid</button><div id="imp-hasil"></div></div></div>
+      <div class="apage" id="p-setting" hidden><form class="card" id="set-form"></form></div>
+    </div>
   </div>
-  <div class="pane" data-g="a" id="t-izinadm" hidden><div id="izin-list"></div></div>
-  <div class="pane" data-g="a" id="t-murid" hidden><div class="card"><h2>Tambah Murid dari Excel</h2>
-    <ol class="steps"><li>Unduh template, lalu isi kolom <b>nis, nama, kelas, sandi, email_ortu</b>. Email orang tua wajib; sandi dikosongkan = sama dengan NIS.</li>
-    <li>Format kolom <b>nis</b> sebagai <b>Teks</b> agar angka 0 di depan tidak hilang.</li><li>Pilih file, periksa pratinjau, lalu klik <b>Impor Murid</b>. NIS yang sudah ada akan dilewati.</li></ol>
-    <div class="actions"><button class="btn ghost" id="imp-template" type="button">⬇️ Unduh Template</button></div>
-    <label style="margin-top:14px">File Excel (.xlsx, .xls, .csv)<input type="file" id="imp-file" accept=".xlsx,.xls,.csv"></label>
-    <div id="imp-prev"></div><button class="btn primary" id="imp-go" type="button" disabled>Impor Murid</button><div id="imp-hasil"></div></div></div>
-  <div class="pane" data-g="a" id="t-setting" hidden><form class="card" id="set-form"></form></div>
 </section>
 </main>
 
@@ -90,7 +119,7 @@
 <div id="toast"></div><div id="loading" hidden><div class="spin"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/config.js"></script>
-<script src="js/app.js"></script>
+<script src="js/config.js?v=3"></script>
+<script src="js/app.js?v=3"></script>
 </body>
 </html>
